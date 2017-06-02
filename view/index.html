@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>MusixMatch</title>
+  <link href="https://fonts.googleapis.com/css?family=Changa+One:400,400i|Open+Sans:300,300i,400,400i,600" rel="stylesheet">
+  <link rel="stylesheet" href="dist/semantic.min.css">
+  <script src="https://unpkg.com/vue"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.16.1/axios.min.js"></script>
+  <style media="screen">
+    body {
+    margin:0;
+    background-color: #6AB5AE;
+    background-image: url( 'https://yunitaernis.files.wordpress.com/2013/09/urlgd.jpg')
+    }
+    h1 {
+    font-size: 68px;
+    color: white;
+    padding-left: 50px;
+    margin-top: 100px;
+    }
+    h2 {
+    font-size: 18px;
+    color: white;
+    margin-top: 0px;
+    padding-left: 50px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="main">
+    <nav class="ui menu teal inverted navbar page grid" style="margin-bottom: 0px">
+      <a href="" class="brand item"><h2>Musixmatch</h2></a>
+
+      <div class="right menu">
+        <div class="item"><button class="ui green button" id="btnLogin">Sign in</button></div>
+        <div class="item">
+          <fb:login-button scope="email, public_profile, publish_actions" onlogin="checkLoginState();"></fb:login-button>
+        </div>
+
+        <div class="item"><button class="ui red button" id="btnSignup">Sign Up</button></div>
+
+      </div>
+    </nav>
+
+    <div class="ui small modal four grid" id="modalLogin">
+        <i class="close icon"></i>
+        <div class="ui center aligned header">
+            <h3>Sign in</h3>
+        </div>
+
+        <div class="ui content grid container">
+
+            <div class="content">
+                <div class="ui form fluid">
+                    <div class="field">
+                        <label>Username</label>
+                        <input class="ui left action fluid icon input" v-model="username" placeholder="Username" type="text">
+                    </div>
+                    <div class="field">
+                        <label>Password</label>
+                        <input v-model="password" placeholder="Password" type="password">
+                    </div>
+
+                    <button id="btnSubmitLogin" class="ui button green" v-on:click="onLogin">Sign in</button>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <div class="ui button">Cancel</div>
+        </div>
+    </div>
+
+    <div class="ui small modal four grid" id="modalSignup">
+        <i class="close icon"></i>
+        <div class="ui center aligned header">
+            <h3>Sign up</h3>
+        </div>
+
+        <div class="ui doubling stackable content grid container">
+            <div class="content">
+                <div class="ui fluid form">
+                    <div class=" field">
+                        <label>Name</label>
+                        <input class="ui left action fluid icon input" v-model="nameR" placeholder="Name" type="text">
+                    </div>
+                    <div class=" field">
+                        <label>Username</label>
+                        <input v-model="usernameR" placeholder="Username" type="text">
+                    </div>
+                    <div class="field">
+                        <label>Password</label>
+                        <input v-model="passwordR" placeholder="Password" type="password">
+                    </div>
+                    <div class=" field">
+                        <label>Email</label>
+                        <input v-model="emailR" placeholder="Email" type="email">
+                    </div>
+                    <button id="btnSubmitRegister" class="ui button blue" v-on:click="onRegister">Sign up</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <div class="ui button">Cancel</div>
+        </div>
+    </div>
+
+     <h1> iSearch  </h1>
+     <h2> Search your favorite song here <h2>
+
+  </div>
+  <script type="text/javascript" src="dist/jquery.min.js"></script>
+  <script type="text/javascript" src="dist/semantic.min.js"></script>
+  <script>
+    $(document).ready(function() {
+      $('.ui.dropdown').dropdown();
+      $('#btnLogin').click(function() {
+          $('#modalLogin').modal('show')
+      })
+      $('#btnSignup').click(function() {
+          $('#modalSignup').modal('show')
+      })
+      $('#btnSubmitLogin').click(function() {
+          $('#modalLogin').modal('hide')
+      })
+      $('#btnSubmitRegister').click(function() {
+          $('#modalSignup').modal('hide')
+      })
+    });
+  </script>
+
+  <script>
+    window.fbAsyncInit = function() {
+      FB.init({
+        appId      : '413434489050147',
+        cookie     : true,
+        xfbml      : true,
+        version    : 'v2.9'
+      });
+      FB.AppEvents.logPageView();
+
+      FB.getLoginStatus(function(response) {
+        console.log(response);
+      });
+
+    };
+
+    (function(d, s, id){
+     var js, fjs = d.getElementsByTagName(s)[0];
+     if (d.getElementById(id)) {return;}
+     js = d.createElement(s); js.id = id;
+     js.src = "//connect.facebook.net/en_US/sdk.js";
+     fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+
+    function checkLoginState() {
+      FB.getLoginStatus(function(response) {
+        statusChangeCallback(response);
+      });
+    }
+
+    function statusChangeCallback(response) {
+      console.log('statusChangeCallback');
+      console.log(response);
+      if (response.status === 'connected') {
+        FB.api('/me', {fields: 'first_name, name, email'}, function (apiResponse) {
+          console.log(apiResponse);
+          window.localStorage.setItem('token', response.authResponse.accessToken);
+          window.localStorage.setItem('id', apiResponse.id);
+          window.localStorage.setItem('name', apiResponse.first_name);
+          window.localStorage.setItem('login_method', 'facebook');
+          let url = 'http://localhost:3000/signInFB';
+          let body = {
+            uuid: apiResponse.id,
+            email: apiResponse.email,
+            name: apiResponse.name
+          }
+          console.log('ini data body');
+          console.log(body);
+          axios.post(url, body)
+            .then((res) => {
+              console.log('Tessss');
+              console.log(res);
+               window.location.href='./home.html';
+            })
+            .catch((err) => {
+              console.log(err);
+            });
+        });
+      } else {
+        // The person is not logged into your app or we are unable to tell.
+        document.getElementById('status').innerHTML = 'Please log ' +
+          'into this app.';
+      }
+    }
+
+    var app = new Vue({
+        el: '#main',
+        data: {
+            message: '',
+            navbar: 'Musixmatch',
+            username: '',
+            password: '',
+            nameR: '',
+            usernameR: '',
+            passwordR: '',
+            emailR: '',
+            login: true,
+            listPost: [],
+            inputSearch: ''
+        },
+        methods: {
+            onLogin: function() {
+                let self = this
+                // console.log(self);
+                axios.post('http://localhost:3000/signIn', {
+                        username: self.username,
+                        password: self.password
+                    })
+                    .then(response => {
+                        // console.log('--------'+response.data);
+                        if (response.data.hasOwnProperty('error')) {
+                            self.message = response.data.error.errmsg
+                        } else {
+                            self.login = false;
+                            // console.log(response.data.role);
+                            // console.log(response.data.token);
+                            // console.log(response.data.id);
+                            localStorage.setItem('token', response.data.token);
+                            localStorage.setItem('id', response.data.id);
+                            localStorage.setItem('username', response.data.username);
+                            window.location = 'home.html'
+                        }
+                    })
+                    .catch(error => {
+                        alert('error')
+                        console.log(error)
+                    })
+            },
+            onRegister: function() {
+                let self = this
+                axios.post('http://localhost:3000/signUp', {
+                        name: self.nameR,
+                        username: self.usernameR,
+                        password: self.passwordR,
+                        email: self.emailR
+                    })
+                    .then(response => {
+                        if (response.data.hasOwnProperty('err')) {
+                            console.log(response.data);
+                            console.log(err);
+                        } else {
+                            alert('Register success!')
+                            console.log(response);
+                        }
+                    })
+                    .catch(err => {
+                        alert('error')
+                    })
+            },
+            signOut: function() {
+              let self = this
+              window.localStorage.clear();
+              self.login = true;
+              window.location.href = 'index.html'
+            }
+        }
+    })
+    </script>
+    <!-- <script src="./fblogin.js"></script> -->
+</body>
+
+</html>

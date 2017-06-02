@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>MusixMatch</title>
+    <link href="https://fonts.googleapis.com/css?family=Changa+One:400,400i|Open+Sans:300,300i,400,400i,600" rel="stylesheet">
+    <link rel="stylesheet" href="dist/semantic.min.css">
+    <script src="https://unpkg.com/vue"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.16.1/axios.min.js"></script>
+    <style media="screen">
+      article {
+      font: 12px arial;
+      color: white;
+      }
+      #someform {
+      margin-top: 100px;
+      width:420px; height:500px;
+      background-color: #fff;
+      padding:30px;
+      border-radius:10px;
+      -webkit-box-shadow: 1px 0px 5px 0px rgba(50, 50, 50, 0.75);
+      -moz-box-shadow:    1px 0px 5px 0px rgba(50, 50, 50, 0.75);
+      box-shadow:         1px 0px 5px 0px rgba(50, 50, 50, 0.75);
+      }
+      .center {
+      /* margin: auto;*/
+      }
+      .absolute-center {
+      margin: auto;
+      position: absolute;
+      top: 0; left: 0; bottom: 0; right: 0;
+      }
+      .empty{height:500em;border:thin solid #000;}
+      p {
+      color: black;
+      }
+    </style>
+</head>
+
+<body>
+    <div id="main" v-if="checkLogin">
+      <nav class="ui menu teal inverted navbar page grid" style="margin-bottom: 0px">
+          <a href="" class="brand item"><h2>Musixmatch</h2></a>
+          <div class="right menu">
+              <div class="item">
+                  <h3>Welcome, </h3></div>
+              <div class="item"><button class="ui red button" v-on:click="signOut">Sign out</button></div>
+          </div>
+      </nav>
+
+      <div class="ui six column centered grid">
+        <div class="column">
+          <div class="field">
+            <div class="ui category search">
+              <div class="ui icon input">
+                <input class="prompt" type="text" placeholder="Search artist..." v-model="artist">
+                <i class="search icon"></i>
+              </div>
+              <div class="results"></div>
+            </div>
+          </div>
+        </div>
+        <div class="column">
+          <div class="field">
+            <div class="ui category search">
+              <div class="ui icon input">
+                <input class="prompt" type="text" placeholder="Search judul lagu..." v-model="track">
+                <i class="search icon"></i>
+              </div>
+              <div class="results"></div>
+            </div>
+          </div>
+        </div>
+        <div class="column">
+          <button class="ui button" type="submit" v-on:click="searchMusix">Submit</button>
+        </div>
+      </div>
+
+      <div class="ui message" v-if="listLagu">
+        <div class="ui three column centered grid">
+          <div class="column">
+            <div class="header">
+              <span style="text-align:center;margin-left:130px">{{artist}} - {{track}}</span>
+              <article>
+                <form id="someform" class="absolute-center">
+                  <p v-for="teks in isi">{{teks}}</p>
+                  <div>
+                    <div id="status"></div>
+                    <button class="ui secondary button" v-on:click.prevent="postFB">
+                      Post to FB
+                    </button>
+                  </div>
+                </form>
+
+              </article>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <script type="text/javascript" src="dist/jquery.min.js"></script>
+    <script type="text/javascript" src="dist/semantic.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('.ui.dropdown').dropdown();
+            $('#btnLogin').click(function() {
+                $('#modalLogin').modal('show')
+            })
+            $('#btnSignup').click(function() {
+                $('#modalSignup').modal('show')
+            })
+            $('#btnSubmitLogin').click(function() {
+                $('#modalLogin').modal('hide')
+            })
+            $('#btnSubmitRegister').click(function() {
+                $('#modalSignup').modal('hide')
+            })
+        });
+    </script>
+
+    <script>
+    window.fbAsyncInit = function() {
+      FB.init({
+        appId      : '413434489050147',
+        cookie     : true,
+        xfbml      : true,
+        version    : 'v2.9'
+      });
+      FB.AppEvents.logPageView();
+
+      FB.getLoginStatus(function(response) {
+        console.log(response);
+      });
+
+    };
+
+    (function(d, s, id){
+     var js, fjs = d.getElementsByTagName(s)[0];
+     if (d.getElementById(id)) {return;}
+     js = d.createElement(s); js.id = id;
+     js.src = "//connect.facebook.net/en_US/sdk.js";
+     fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+
+    function post(status) {
+      FB.api('/me/feed', 'post', {message: status}, function(response) {
+        console.log(response)
+        // document.getElementById('status').innerHTML = window.localStorage.getItem('id');
+      });
+    }
+
+        var app = new Vue({
+          el: '#main',
+          data: {
+              message: '',
+              navbar: 'Musixmatch',
+              checkLogin: false,
+              artist: '',
+              track: '',
+              isi: '',
+              listLagu: false
+          },
+          methods: {
+            signOut: function() {
+              let self = this
+              window.localStorage.clear();
+              self.login = true;
+              window.location.href = 'index.html'
+            },
+            searchMusix: function() {
+              let self = this
+              // console.log(self);
+              axios.post('http://localhost:3000/matcher', {
+                artist: self.artist,
+                track: self.track
+              })
+              .then(response => {
+                console.log('wwwwwwwwwwww');
+                console.log(response.data);
+                self.isi = response.data
+                self.artist = self.artist
+                self.track = self.track
+                self.listLagu = true
+                // if (response.data.hasOwnProperty('error')) {
+                //   self.message = response.data.error.errmsg
+                // } else {
+                //   console.log(response);
+                // }
+              })
+              .catch(error => {
+                alert('error')
+                console.log(error)
+              })
+            },
+            postFB: function() {
+              console.log(this.isi);
+              let dataTeks = ''+this.isi
+              post(dataTeks)
+            }
+          },
+          created() {
+            if (window.localStorage.getItem('token') !== null) {
+              this.checkLogin = true
+            } else {
+              alert('Login first')
+              window.location = "index.html"
+            }
+          }
+        })
+    </script>
+</body>
+
+</html>
